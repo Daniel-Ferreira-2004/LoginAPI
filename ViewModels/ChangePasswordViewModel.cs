@@ -2,7 +2,7 @@
 
 namespace LoginAPI.ViewModels
 {
-    public class ChangePassowordViewModel
+    public class ChangePasswordViewModel
     {
         [Required(ErrorMessage = "Email is Requerid")]
         [EmailAddress]
