@@ -21,7 +21,7 @@ namespace LoginAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login( LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -91,14 +91,51 @@ namespace LoginAPI.Controllers
                 }
                 else
                 {
-                    return RedirectToAction("ChangePassword", "Account", new {username = user.UserName});
+                    return RedirectToAction("ChangePassword", "Account", new { username = user.UserName });
                 }
             }
             return View(model);
         }
-        public IActionResult ChangePassword()
+        public IActionResult ChangePassword(string username)
         {
-            return View();
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("VerifyEmail", "Account");
+            }
+            return View(new ChangePasswordViewModel { email = username });
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+
+            if (user == null)
+            {
+                ModelState.AddModelError("", "User not found");
+                return View(model);
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(
+                user,
+                token,
+                model.NewPassword
+            );
+
+            if (result.Succeeded)
+                return RedirectToAction("Login");
+
+            foreach (var error in result.Errors)
+                ModelState.AddModelError("", error.Description);
+
+            return View(model);
+        }
+
     }
 }
+
