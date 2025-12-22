@@ -19,6 +19,26 @@ namespace LoginAPI.Controllers
         {
             return View();
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Login( LoginViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var result = await _signInManager.PasswordSignInAsync(model.email, model.password, model.rememberMe, lockoutOnFailure: false);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Email or Password is incorrect.");
+                    return View(model);
+                }
+            }
+            return View(model);
+        }
+
         [HttpGet]
         public IActionResult Register()
         {
@@ -56,6 +76,25 @@ namespace LoginAPI.Controllers
         public IActionResult VerifyEmail()
         {
             return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerifyEmail(VerifyEmailViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByEmailAsync(model.email);
+                if (user == null)
+                {
+                    ModelState.AddModelError("", "Something is wrong");
+                    return View(model);
+                }
+                else
+                {
+                    return RedirectToAction("ChangePassword", "Account", new {username = user.UserName});
+                }
+            }
+            return View(model);
         }
         public IActionResult ChangePassword()
         {
