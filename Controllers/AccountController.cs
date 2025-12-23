@@ -112,8 +112,7 @@ namespace LoginAPI.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var user = await _userManager.FindByEmailAsync(model.Email);
-
+            var user = await _userManager.FindByNameAsync(model.email);
             if (user == null)
             {
                 ModelState.AddModelError("", "User not found");
@@ -121,14 +120,10 @@ namespace LoginAPI.Controllers
             }
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var result = await _userManager.ResetPasswordAsync(
-                user,
-                token,
-                model.NewPassword
-            );
+            var result = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
 
             if (result.Succeeded)
-                return RedirectToAction("Login");
+                return RedirectToAction("Login", "Account");
 
             foreach (var error in result.Errors)
                 ModelState.AddModelError("", error.Description);
